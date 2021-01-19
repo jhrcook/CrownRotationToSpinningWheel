@@ -1,5 +1,5 @@
-import XCTest
 @testable import CrownRotationToSpinningWheel
+import XCTest
 
 final class CrownRotationToSpinningWheelTests: XCTestCase {
     func testExample() {
