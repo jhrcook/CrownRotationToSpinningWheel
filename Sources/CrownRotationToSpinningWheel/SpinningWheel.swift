@@ -10,16 +10,47 @@ import Foundation
 
 class SpinningWheel: ObservableObject {
     // Physics constants
-    let momentOfInertia: Float
-    internal var angularVelocity: Float = 0.0
-    let friction: Float
+    let damping: Double
 
     // API constants
-    let publishingFrequency: Float
+    let publishingFrequency: Double
 
-    init(momentOfInertia: Float = 1.0, friction: Float = 0.2, publishingFrequency: Float = 0.1) {
-        self.momentOfInertia = momentOfInertia
-        self.friction = friction
+    // Data management
+    let crownVelocity: CrownVelocity
+
+    // Wheel state
+    var previousReadingTimepoint = Date()
+    let minimumSignificantCrownVelocity: Double = 0.01
+    var wheelVelocity: Double = 0.0
+    @Published var wheelRotation: Double = 0.0
+
+    public init(damping: Double = 0.2, publishingFrequency: Double = 0.1, crownVelocityMemory: Double = 0.1) {
+        self.damping = damping
         self.publishingFrequency = publishingFrequency
+        crownVelocity = CrownVelocity(memory: crownVelocityMemory)
+    }
+
+    public func crownInput(angle: Double, at time: Date) {
+        crownVelocity.new(angle: angle, at: time)
+    }
+
+    func updateWheelVelocity() {
+        let cv = crownVelocity.velocity()
+        if abs(cv) > minimumSignificantCrownVelocity {
+            wheelVelocity = cv
+            return
+        }
+        wheelVelocity *= (1.0 - damping)
+    }
+
+    func updateWheelRotation(after timeInterval: Double) {
+        wheelRotation += timeInterval * wheelVelocity
+    }
+
+    public func update(after _: Double) {
+        updateWheelVelocity()
+        let newReadingTimepoint = Date()
+        updateWheelRotation(after: newReadingTimepoint.distance(to: previousReadingTimepoint))
+        previousReadingTimepoint = newReadingTimepoint
     }
 }

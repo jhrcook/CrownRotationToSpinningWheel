@@ -37,17 +37,11 @@ final class CrownVelocityTests: XCTestCase {
 
     func testVelocityCalculation() {
         // Given
-        let N = 10
-        let timeInterval: Double = 0.1
-        let startDate = Date()
-        let dates: [Date] = (0 ..< N).map { startDate.advanced(by: Double($0) * timeInterval) }
-        let angles: [Double] = (0 ..< N).map { Double($0) }
-        for (date, angle) in zip(dates, angles) {
-            crownVelocity.new(angle: angle, at: date)
-        }
+        let mockVelocityData = mockCrownVelocityData(n: 10, timeInterval: 0.1)
+        mockVelocityData.applyData(to: crownVelocity)
 
         // When
-        let velocity = crownVelocity.velocity(at: startDate)
+        let velocity = crownVelocity.velocity(at: mockVelocityData.startingDate)
 
         // Then
         let expectedVelocity = 0.1
@@ -58,8 +52,4 @@ final class CrownVelocityTests: XCTestCase {
     func areClose(_ a: Double, _ b: Double, error: Double = 0.01) -> Bool {
         return abs(a - b) < error
     }
-
-//    static var allTests = [
-//        ("testExample", testExample),
-//    ]
 }
