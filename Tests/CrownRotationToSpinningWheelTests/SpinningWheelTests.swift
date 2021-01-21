@@ -10,11 +10,10 @@ import XCTest
 
 final class SpinningWheelTests: XCTestCase {
     var spinningWheel: SpinningWheel!
-    let damping = 0.1
 
     override func setUp() {
         super.setUp()
-        spinningWheel = SpinningWheel(damping: damping, publishingFrequency: 1, crownVelocityMemory: 10)
+        spinningWheel = SpinningWheel(damping: 0.1, publishingFrequency: 1, crownVelocityMemory: 10)
     }
 
     override func tearDown() {
@@ -46,6 +45,25 @@ final class SpinningWheelTests: XCTestCase {
 
         // Then
         XCTAssertEqual(spinningWheel.crownVelocity.velocity(), 0.0)
-        XCTAssertEqual(spinningWheel.wheelVelocity, originalWheelVelocity * (1 - damping))
+        XCTAssertEqual(spinningWheel.wheelVelocity, originalWheelVelocity * (1 - spinningWheel.damping))
+    }
+
+    func testReverseCrownVelocity() {
+        // Given
+        spinningWheel.damping = 0.0 // no reduction in speed over time
+        let mockVelocityData = mockCrownVelocityData(n: 10, timeInterval: 1.0)
+        mockVelocityData.applyData(to: spinningWheel.crownVelocity)
+        spinningWheel.updateWheelVelocity()
+        let initialWheelSpeed = spinningWheel.wheelVelocity
+
+        // When
+        var reverseVelocityData = mockCrownVelocityData(n: 5, timeInterval: 1.0)
+        reverseVelocityData.angles = reverseVelocityData.angles.map { -1 * $0 }
+        reverseVelocityData.applyData(to: spinningWheel.crownVelocity)
+        spinningWheel.updateWheelVelocity()
+        let finalWheelSpeed = spinningWheel.wheelVelocity
+
+        // Then
+        XCTAssertGreaterThan(initialWheelSpeed, finalWheelSpeed)
     }
 }

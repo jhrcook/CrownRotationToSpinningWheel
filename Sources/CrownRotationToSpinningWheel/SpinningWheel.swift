@@ -10,7 +10,7 @@ import Foundation
 
 class SpinningWheel: ObservableObject {
     // Physics constants
-    let damping: Double
+    var damping: Double
 
     // API constants
     let publishingFrequency: Double
@@ -37,10 +37,16 @@ class SpinningWheel: ObservableObject {
     func updateWheelVelocity() {
         let cv = crownVelocity.velocity()
         if abs(cv) > minimumSignificantCrownVelocity {
-            wheelVelocity = cv
-            return
+            if cv / cv == wheelVelocity / wheelVelocity {
+                if abs(cv) > abs(wheelVelocity) {
+                    wheelVelocity = cv
+                }
+            } else {
+                wheelVelocity += cv
+            }
+        } else {
+            wheelVelocity *= (1.0 - damping)
         }
-        wheelVelocity *= (1.0 - damping)
     }
 
     func updateWheelRotation(after timeInterval: Double) {
