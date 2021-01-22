@@ -7,12 +7,12 @@
 
 import Foundation
 
-class CrownVelocity {
+public class CrownVelocity {
     let memory: Double
     var data = [CrownRotationDatum]()
 
     public init(memory: Double = 0.1) {
-        self.memory = max(memory, 0.1)
+        self.memory = memory
     }
 
     public func new(angle: Double, at time: Date) {
@@ -20,9 +20,9 @@ class CrownVelocity {
     }
 
     public func velocity(at currentTime: Date = Date()) -> Double {
-        data = data.filter { $0.time.timeIntervalSince(currentTime) < memory }
-
-        guard data.count > 0 else {
+        data = data.filter { abs($0.time.timeIntervalSince(currentTime)) < memory }
+        print("crown velocity number of data points: \(data.count)")
+        guard data.count > 1 else {
             return 0.0
         }
 

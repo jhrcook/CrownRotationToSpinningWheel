@@ -8,21 +8,21 @@
 import Combine
 import Foundation
 
-class SpinningWheel: ObservableObject {
+public class SpinningWheel: ObservableObject {
     // Physics constants
-    var damping: Double
+    public var damping: Double
 
     // API constants
     let publishingFrequency: Double
 
     // Data management
-    let crownVelocity: CrownVelocity
+    public let crownVelocity: CrownVelocity
 
     // Wheel state
     var previousReadingTimepoint = Date()
-    let minimumSignificantCrownVelocity: Double = 0.01
+    let minimumSignificantVelocity: Double = 0.1
     var wheelVelocity: Double = 0.0
-    @Published var wheelRotation: Double = 0.0
+    @Published public var wheelRotation: Double = 0.0
 
     public init(damping: Double = 0.2, publishingFrequency: Double = 0.1, crownVelocityMemory: Double = 0.1) {
         self.damping = damping
@@ -36,7 +36,8 @@ class SpinningWheel: ObservableObject {
 
     func updateWheelVelocity() {
         let cv = crownVelocity.velocity()
-        if abs(cv) > minimumSignificantCrownVelocity {
+        print("crown velocity: \(cv)")
+        if abs(cv) > minimumSignificantVelocity {
             if cv / cv == wheelVelocity / wheelVelocity {
                 if abs(cv) > abs(wheelVelocity) {
                     wheelVelocity = cv
@@ -44,6 +45,8 @@ class SpinningWheel: ObservableObject {
             } else {
                 wheelVelocity += cv
             }
+        } else if abs(wheelVelocity) < minimumSignificantVelocity {
+            wheelVelocity = 0.0
         } else {
             wheelVelocity *= (1.0 - damping)
         }
@@ -53,10 +56,11 @@ class SpinningWheel: ObservableObject {
         wheelRotation += timeInterval * wheelVelocity
     }
 
-    public func update(after _: Double) {
+    public func update() {
         updateWheelVelocity()
         let newReadingTimepoint = Date()
         updateWheelRotation(after: newReadingTimepoint.distance(to: previousReadingTimepoint))
         previousReadingTimepoint = newReadingTimepoint
+        print("wheel velocity: \(wheelVelocity), wheel rotation: \(wheelRotation)")
     }
 }
