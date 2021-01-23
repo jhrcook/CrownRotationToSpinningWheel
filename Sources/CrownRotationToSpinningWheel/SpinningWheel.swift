@@ -9,13 +9,8 @@ import Combine
 import Foundation
 
 public class SpinningWheel: ObservableObject {
-    // Physics constants
+    // Physics
     public var damping: Double
-
-    // API constants
-    let publishingFrequency: Double
-
-    // Data management
     public let crownVelocity: CrownVelocity
 
     // Wheel state
@@ -24,9 +19,8 @@ public class SpinningWheel: ObservableObject {
     var wheelVelocity: Double = 0.0
     @Published public var wheelRotation: Double = 0.0
 
-    public init(damping: Double = 0.2, publishingFrequency: Double = 0.1, crownVelocityMemory: Double = 0.1) {
+    public init(damping: Double = 0.2, crownVelocityMemory: Double = 0.1) {
         self.damping = damping
-        self.publishingFrequency = publishingFrequency
         crownVelocity = CrownVelocity(memory: crownVelocityMemory)
     }
 
@@ -36,9 +30,8 @@ public class SpinningWheel: ObservableObject {
 
     func updateWheelVelocity() {
         let cv = crownVelocity.velocity()
-        print("crown velocity: \(cv)")
         if abs(cv) > minimumSignificantVelocity {
-            if cv / cv == wheelVelocity / wheelVelocity {
+            if crownAndWheelAreRotatingInTheSaveDirection(cv: cv) {
                 if abs(cv) > abs(wheelVelocity) {
                     wheelVelocity = cv
                 }
@@ -52,6 +45,10 @@ public class SpinningWheel: ObservableObject {
         }
     }
 
+    func crownAndWheelAreRotatingInTheSaveDirection(cv: Double) -> Bool {
+        return cv / cv == wheelVelocity / wheelVelocity
+    }
+
     func updateWheelRotation(after timeInterval: Double) {
         wheelRotation += timeInterval * wheelVelocity
     }
@@ -61,6 +58,5 @@ public class SpinningWheel: ObservableObject {
         let newReadingTimepoint = Date()
         updateWheelRotation(after: newReadingTimepoint.distance(to: previousReadingTimepoint))
         previousReadingTimepoint = newReadingTimepoint
-        print("wheel velocity: \(wheelVelocity), wheel rotation: \(wheelRotation)")
     }
 }

@@ -21,11 +21,9 @@ public class CrownVelocity {
 
     public func velocity(at currentTime: Date = Date()) -> Double {
         data = data.filter { abs($0.time.timeIntervalSince(currentTime)) < memory }
-        print("crown velocity number of data points: \(data.count)")
         guard data.count > 1 else {
             return 0.0
         }
-
         let vs = (1 ..< data.count).map { data[$0] - data[$0 - 1] }
         return vs.reduce(0.0, +) / Double(vs.count)
     }
