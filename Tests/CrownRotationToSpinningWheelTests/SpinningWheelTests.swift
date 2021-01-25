@@ -13,7 +13,7 @@ final class SpinningWheelTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        spinningWheel = SpinningWheel(damping: 0.1, publishingFrequency: 1, crownVelocityMemory: 10)
+        spinningWheel = SpinningWheel(damping: 0.1, crownVelocityMemory: 10)
     }
 
     override func tearDown() {
