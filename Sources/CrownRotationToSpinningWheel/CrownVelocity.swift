@@ -36,6 +36,10 @@ public class CrownVelocity {
             data.append(CrownRotationDatum(angle: lastDatum.angle, time: newDate))
         }
     }
+
+    func clearData() {
+        data = []
+    }
 }
 
 struct CrownRotationDatum {

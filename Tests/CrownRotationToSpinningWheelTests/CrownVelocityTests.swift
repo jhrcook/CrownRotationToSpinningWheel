@@ -14,7 +14,7 @@ final class CrownVelocityTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        crownVelocity = CrownVelocity(memory: 10.0)
+        crownVelocity = CrownVelocity(memory: 100_000)
     }
 
     override func tearDown() {
@@ -47,6 +47,40 @@ final class CrownVelocityTests: XCTestCase {
         let expectedVelocity = 0.1
         XCTAssertTrue(areClose(velocity, expectedVelocity),
                       "\(velocity) and \(expectedVelocity) are not equal.")
+    }
+
+    func testAdditionOfNewDataPointAfterSufficientTime() {
+        // Given
+        let mockVelocityData = mockCrownVelocityData(n: 10, timeInterval: 0.1, startingDate: Date().advanced(by: -200))
+        mockVelocityData.applyData(to: crownVelocity)
+
+        // When
+        let initialCount = crownVelocity.data.count
+        crownVelocity.addLatestTimePoint(&crownVelocity.data)
+
+        // Then
+        XCTAssertTrue(crownVelocity.data.count == initialCount + 1)
+    }
+
+    func testSlowerVelocityAfterTimeWithNoNewData() {
+        // Given (1)
+        let mockVelocityData1 = mockCrownVelocityData(n: 10, timeInterval: 0.1, startingDate: Date().advanced(by: -200))
+        mockVelocityData1.applyData(to: crownVelocity)
+
+        // When (1)
+        let velocity1 = crownVelocity.velocity()
+
+        crownVelocity.clearData()
+
+        // Given (2)
+        let mockVelocityData2 = mockCrownVelocityData(n: 10, timeInterval: 0.1, startingDate: Date())
+        mockVelocityData2.applyData(to: crownVelocity)
+
+        // When (2)
+        let velocity2 = crownVelocity.velocity()
+
+        // Then
+        XCTAssertGreaterThan(velocity2, velocity1)
     }
 
     func areClose(_ a: Double, _ b: Double, error: Double = 0.01) -> Bool {
