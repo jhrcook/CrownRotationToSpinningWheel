@@ -13,7 +13,7 @@ final class SpinningWheelTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        spinningWheel = SpinningWheel(damping: 0.1, crownVelocityMemory: 10)
+        spinningWheel = SpinningWheel(damping: 0.1, crownVelocityMemory: 20)
     }
 
     override func tearDown() {
@@ -21,31 +21,41 @@ final class SpinningWheelTests: XCTestCase {
         super.tearDown()
     }
 
+    func testExponentialDecayCalculation() {
+        // Given
+        let start = 5000.0
+        let decayConstant = 0.5
+        let halfLife = log(2.0) / decayConstant
+
+        // When
+        let final = spinningWheel.exponentialDecay(starting: start, after: halfLife, decayConstant: decayConstant)
+
+        // Then
+        XCTAssertEqual(final, start / 2)
+    }
+
+    func testTotalTimeOfExponentialDecay() {
+        // Given
+        let start = 1000.0
+        let final = start / 2.0
+        let decayConstant = 0.5
+
+        // When
+        let duration = spinningWheel.totalTimeOfExponentialDecay(initialValue: start, finalValue: final, decayConstant: decayConstant)
+
+        // Then
+        XCTAssertEqual(duration, log(2.0) / decayConstant)
+    }
+
     func testWheelVelocityIncrease() {
         // Given
-        let mockVelocityData = mockCrownVelocityData(n: 10, timeInterval: 1.0)
+        let mockData = mockCrownVelocityData(n: 10, timeInterval: 1)
 
         // When
-        mockVelocityData.applyData(to: spinningWheel)
-        spinningWheel.updateWheelVelocity()
+        mockData.applyData(to: spinningWheel)
 
         // Then
-        XCTAssertEqual(spinningWheel.crownVelocity.velocity(), spinningWheel.wheelVelocity)
-
-        // When
-        spinningWheel.updateWheelVelocity()
-
-        // Then
-        XCTAssertEqual(spinningWheel.crownVelocity.velocity(), spinningWheel.wheelVelocity)
-
-        // When
-        let originalWheelVelocity = spinningWheel.wheelVelocity
-        spinningWheel.crownVelocity.data = [] // Crown velocty -> 0
-        spinningWheel.updateWheelVelocity()
-
-        // Then
-        XCTAssertEqual(spinningWheel.crownVelocity.velocity(), 0.0)
-        XCTAssertEqual(spinningWheel.wheelVelocity, originalWheelVelocity * (1 - spinningWheel.damping))
+        XCTAssertTrue(spinningWheel.wheelRotation > 0)
     }
 
     func testReverseCrownVelocity() {
