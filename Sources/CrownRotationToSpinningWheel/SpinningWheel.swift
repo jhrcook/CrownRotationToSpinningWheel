@@ -31,6 +31,7 @@ public class SpinningWheel: ObservableObject {
 
     func updateWheelVelocity() {
         let cv = crownVelocity.velocity()
+        print("crown velocity: \(cv)")
         if abs(cv) > minimumSignificantVelocity {
             wheelVelocity = cv
         } else {
@@ -40,17 +41,24 @@ public class SpinningWheel: ObservableObject {
 
     func updateWheelRotationAngle() {
         updateWheelVelocity()
-        wheelRotation = calculateFinalAngle(velocity: wheelVelocity)
+        print("wheel velocity: \(wheelVelocity)")
+        wheelRotation = calculateFinalAngle(initialAngle: wheelRotation, velocity: wheelVelocity)
+        print("wheel rotation angle: \(wheelRotation)")
     }
 
-    func calculateFinalAngle(velocity: Double) -> Double {
-        0.5 * (velocity - minimumSignificantVelocity) * totalTimeOfExponentialDecay(initialValue: velocity, finalValue: minimumSignificantVelocity)
+    func calculateFinalAngle(initialAngle: Double, velocity: Double) -> Double {
+        if abs(velocity) < minimumSignificantVelocity { return wheelRotation }
+        let dAngle = 0.5 * (velocity - minimumSignificantVelocity) * abs(totalTimeOfExponentialDecay(initialValue: velocity, finalValue: minimumSignificantVelocity))
+        return dAngle + initialAngle
     }
 
     func decay(wheelVelocity wv: Double, until newTimePoint: Date = Date()) -> Double {
+        if abs(wheelVelocity) < minimumSignificantVelocity { return 0 }
+
         let dTime = previousReadingTimepoint.distance(to: newTimePoint)
         let newWheelVelocity = exponentialDecay(starting: wv, after: dTime)
         previousReadingTimepoint = newTimePoint
+
         return newWheelVelocity
     }
 
@@ -59,6 +67,6 @@ public class SpinningWheel: ObservableObject {
     }
 
     func totalTimeOfExponentialDecay(initialValue: Double, finalValue: Double, decayConstant: Double = 0.1) -> Double {
-        -1.0 * (1.0 / decayConstant) * log(finalValue / initialValue)
+        -1.0 * (1.0 / decayConstant) * log(abs(finalValue) / abs(initialValue))
     }
 }
