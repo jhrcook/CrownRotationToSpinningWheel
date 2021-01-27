@@ -19,44 +19,54 @@ public class SpinningWheel: ObservableObject {
     var wheelVelocity: Double = 0.0
     @Published public var wheelRotation: Double = 0.0
 
-    public init(damping: Double = 0.2, crownVelocityMemory: Double = 0.1) {
+    public init(damping: Double = 0.2, crownVelocityMemory: Double = 1) {
         self.damping = damping
         crownVelocity = CrownVelocity(memory: crownVelocityMemory)
     }
 
     public func crownInput(angle: Double, at time: Date) {
         crownVelocity.new(angle: angle, at: time)
+        updateWheelRotationAngle()
     }
 
     func updateWheelVelocity() {
         let cv = crownVelocity.velocity()
+        print("crown velocity: \(cv)")
         if abs(cv) > minimumSignificantVelocity {
-            if crownAndWheelAreRotatingInTheSaveDirection(cv: cv) {
-                if abs(cv) > abs(wheelVelocity) {
-                    wheelVelocity = cv
-                }
-            } else {
-                wheelVelocity += cv
-            }
-        } else if abs(wheelVelocity) < minimumSignificantVelocity {
-            wheelVelocity = 0.0
+            wheelVelocity = cv
         } else {
-            wheelVelocity *= (1.0 - damping)
+            wheelVelocity = decay(wheelVelocity: wheelVelocity)
         }
     }
 
-    func crownAndWheelAreRotatingInTheSaveDirection(cv: Double) -> Bool {
-        return cv / cv == wheelVelocity / wheelVelocity
-    }
-
-    func updateWheelRotation(after timeInterval: Double) {
-        wheelRotation += timeInterval * wheelVelocity
-    }
-
-    public func update() {
+    func updateWheelRotationAngle() {
         updateWheelVelocity()
-        let newReadingTimepoint = Date()
-        updateWheelRotation(after: newReadingTimepoint.distance(to: previousReadingTimepoint))
-        previousReadingTimepoint = newReadingTimepoint
+        print("wheel velocity: \(wheelVelocity)")
+        wheelRotation = calculateFinalAngle(initialAngle: wheelRotation, velocity: wheelVelocity)
+        print("wheel rotation angle: \(wheelRotation)")
+    }
+
+    func calculateFinalAngle(initialAngle: Double, velocity: Double) -> Double {
+        if abs(velocity) < minimumSignificantVelocity { return wheelRotation }
+        let dAngle = 0.5 * (velocity - minimumSignificantVelocity) * abs(totalTimeOfExponentialDecay(initialValue: velocity, finalValue: minimumSignificantVelocity))
+        return dAngle + initialAngle
+    }
+
+    func decay(wheelVelocity wv: Double, until newTimePoint: Date = Date()) -> Double {
+        if abs(wheelVelocity) < minimumSignificantVelocity { return 0 }
+
+        let dTime = previousReadingTimepoint.distance(to: newTimePoint)
+        let newWheelVelocity = exponentialDecay(starting: wv, after: dTime)
+        previousReadingTimepoint = newTimePoint
+
+        return newWheelVelocity
+    }
+
+    func exponentialDecay(starting from: Double, after time: TimeInterval, decayConstant: Double = 0.1) -> Double {
+        from * exp(-1 * decayConstant * time)
+    }
+
+    func totalTimeOfExponentialDecay(initialValue: Double, finalValue: Double, decayConstant: Double = 0.1) -> Double {
+        -1.0 * (1.0 / decayConstant) * log(abs(finalValue) / abs(initialValue))
     }
 }
