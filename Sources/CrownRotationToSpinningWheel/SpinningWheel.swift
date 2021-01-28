@@ -16,7 +16,7 @@ public class SpinningWheel: ObservableObject {
     // Wheel state
     var previousReadingTimepoint = Date()
     let minimumSignificantVelocity: Double = 0.1
-    var wheelVelocity: Double = 0.0
+    public internal(set) var wheelVelocity: Double = 0.0
     @Published public var wheelRotation: Double = 0.0
 
     public init(damping: Double = 0.2, crownVelocityMemory: Double = 1) {
@@ -31,7 +31,6 @@ public class SpinningWheel: ObservableObject {
 
     func updateWheelVelocity() {
         let cv = crownVelocity.velocity()
-        print("crown velocity: \(cv)")
         if abs(cv) > minimumSignificantVelocity {
             wheelVelocity = cv
         } else {
@@ -41,9 +40,7 @@ public class SpinningWheel: ObservableObject {
 
     func updateWheelRotationAngle() {
         updateWheelVelocity()
-        print("wheel velocity: \(wheelVelocity)")
         wheelRotation = calculateFinalAngle(initialAngle: wheelRotation, velocity: wheelVelocity)
-        print("wheel rotation angle: \(wheelRotation)")
     }
 
     func calculateFinalAngle(initialAngle: Double, velocity: Double) -> Double {
